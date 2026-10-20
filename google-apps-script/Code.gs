@@ -1,4 +1,4 @@
-const SPREADSHEET_ID = '10HHXen5gHTj0G3uysX51w78SYLEfLhXIsO7eIQ75ToI';
+const SPREADSHEET_ID = '1XZFT-DhpGt1i3xtF0CyeKVBTfnSCGJG8OaPTDy__fnc';
 const DRIVE_FOLDER_ID = '1vZf28-Eoo7OBy1hAb-9lKKsBZ0INkPnU';
 const MAX_RESUME_MB = 20;
 const HEADERS = [
@@ -31,10 +31,17 @@ function testConnections() {
   return 'SHEET OK: ' + ss.getName() + ' | DRIVE OK: ' + folder.getName();
 }
 
+// Run once from the Apps Script editor to grant permission for confirmation emails.
+function authorizeConfirmationEmail() {
+  return 'Email authorization ready. Remaining daily recipients: ' +
+    MailApp.getRemainingDailyQuota();
+}
+
 function doPost(e) {
   let ok = false;
   let message = 'Unknown error.';
   let resumeUrl = '';
+  let emailSent = false;
 
   try {
     if (!e || !e.parameter) {
@@ -130,12 +137,64 @@ function doPost(e) {
     SpreadsheetApp.flush();
     ok = true;
     message = 'Application submitted successfully.';
+
+    // Send confirmation after the application is safely written to the sheet.
+    // A mail delivery issue must not turn a saved application into a failed submission.
+    try {
+      sendApplicantConfirmation_(p);
+      emailSent = true;
+    } catch (emailErr) {
+      console.error('Application saved, but confirmation email failed: ' +
+        (emailErr && emailErr.message ? emailErr.message : emailErr));
+    }
   } catch (err) {
     message = err && err.message ? err.message : String(err);
     console.error(message);
   }
 
-  return response_(ok, message, resumeUrl);
+  return response_(ok, message, resumeUrl, emailSent);
+}
+
+function sendApplicantConfirmation_(p) {
+  const applicant = clean_(p.name);
+  const recipient = clean_(p.emailId);
+  const role = clean_(p.role);
+  const program = clean_(p.academicProgram);
+  const safeApplicant = escapeHtml_(applicant || 'Applicant');
+  const safeRole = escapeHtml_(role || 'Volunteer');
+  const safeProgram = escapeHtml_(program);
+  const subject = 'DARE Recruitment — application received';
+  const body = 'Hi ' + (applicant || 'there') + ',\n\n' +
+    'Your DARE Recruitment application has been received.\n\n' +
+    'Academic program: ' + program + '\n' +
+    'Selected role: ' + role + '\n\n' +
+    'Thank you for applying. The DARE team will contact you with updates.\n\n' +
+    '— DARE Recruitment Team';
+  const htmlBody = '<div style="font-family:Georgia,serif;color:#192b3d;line-height:1.6">' +
+    '<h2 style="color:#234c69">Your application has reached the Great Hall</h2>' +
+    '<p>Hi ' + safeApplicant + ',</p>' +
+    '<p>Your DARE Recruitment application has been received.</p>' +
+    '<p><strong>Academic program:</strong> ' + safeProgram + '<br>' +
+    '<strong>Selected role:</strong> ' + safeRole + '</p>' +
+    '<p>Thank you for applying. The DARE team will contact you with updates.</p>' +
+    '<p>— DARE Recruitment Team</p></div>';
+
+  if (!recipient || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient)) {
+    throw new Error('Applicant email address is missing or invalid.');
+  }
+  MailApp.sendEmail({
+    to: recipient,
+    subject: subject,
+    body: body,
+    htmlBody: htmlBody,
+    name: 'DARE Recruitment'
+  });
+}
+
+function escapeHtml_(value) {
+  return String(value || '').replace(/[&<>"']/g, function (char) {
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char];
+  });
 }
 
 function ensureHeaders_(sheet) {
@@ -160,12 +219,13 @@ function clean_(value) {
   return String(value || '').trim().slice(0, 5000);
 }
 
-function response_(ok, message, resumeUrl) {
+function response_(ok, message, resumeUrl, emailSent) {
   const payload = JSON.stringify({
     source: 'axios-recruitment',
     ok: ok,
     message: message,
-    resumeUrl: resumeUrl || ''
+    resumeUrl: resumeUrl || '',
+    emailSent: Boolean(emailSent)
   });
 
   const html = '<!doctype html><html><body><script>' +
