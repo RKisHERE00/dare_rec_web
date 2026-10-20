@@ -67,7 +67,9 @@ setSoundState('TAP FOR MUSIC',false);
 playBackgroundMusic();
 document.querySelectorAll('[data-open-form]').forEach(button=>button.addEventListener('click',()=>openModal()));
 document.querySelectorAll('[data-close-modal]').forEach(button=>button.addEventListener('click',closeModal));
-document.addEventListener('keydown',event=>{if(event.key==='Escape'&&modal.classList.contains('open'))closeModal();if(event.key.toLowerCase()==='m')toggleBackgroundMusic()});
+document.addEventListener('keydown',event=>{
+  if(event.key==='Escape'&&modal.classList.contains('open'))closeModal();
+});
 // Stable interaction layer
 function goNext(){
   if(!validateStep()) return;
@@ -161,13 +163,15 @@ form.addEventListener('submit',async e=>{
   status.textContent=resume?'ASSEMBLING APPLICATION + UPLOADING RESUME…':'ASSEMBLING APPLICATION…';
   try{
     const resumeBase64=resume?await fileToBase64(resume):'';
-    await submitViaHiddenFrame(cfg,{ 
+    const submissionResult=await submitViaHiddenFrame(cfg,{ 
       name:v.name||'', scholarNo:v.scholarNo||'', academicProgram:v.academicProgram||'',
       contactNo:v.contactNo||'', emailId:v.emailId||'', branch:v.branch||'', role:v.role||'',
       whyInterested:v.whyInterested||'', resumeName:resume?.name||'',
       resumeMimeType:resume?.type||'', resumeBase64
     });
-    status.textContent=resume?'APPLICATION SUBMITTED ✓ — RESUME SAVED TO DRIVE.':'APPLICATION SUBMITTED ✓ — RESUME WAS OPTIONAL AND WAS NOT UPLOADED.';
+    status.textContent=submissionResult.emailSent
+      ? (resume?'APPLICATION SUBMITTED ✓ — CONFIRMATION OWL SENT; RESUME SAVED TO DRIVE.':'APPLICATION SUBMITTED ✓ — CONFIRMATION OWL SENT TO YOUR EMAIL.')
+      : (resume?'APPLICATION SAVED ✓ — RESUME SAVED TO DRIVE, BUT EMAIL CONFIRMATION COULD NOT BE SENT.':'APPLICATION SAVED ✓ — EMAIL CONFIRMATION COULD NOT BE SENT.');
     setTimeout(()=>{form.reset(); resumeName.textContent='DROP YOUR RESUME HERE'; syncProgramRole(); updateHero(''); showStep(0); closeModal();},1200);
   }catch(err){
     console.error(err);
