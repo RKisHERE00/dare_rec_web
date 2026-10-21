@@ -116,6 +116,7 @@ function doPost(e) {
       clean_(p.scholarNo),
       clean_(p.academicProgram),
       "'" + clean_(p.contactNo), // Force phone numbers such as +91... to remain plain text in Sheets.
+      '', // Contact number is written after formatting its cell as plain text.
       clean_(p.emailId),
       clean_(p.branch),
       clean_(p.role),
@@ -125,6 +126,9 @@ function doPost(e) {
 
     sheet.appendRow(row);
     const rowNumber = sheet.getLastRow();
+    const contactCell = sheet.getRange(rowNumber, 5);
+    contactCell.setNumberFormat('@');
+    contactCell.setValue(clean_(p.contactNo));
 
     // Show the original resume filename in the Resume column as a clickable Drive link when provided.
     if (resumeUrl) {
