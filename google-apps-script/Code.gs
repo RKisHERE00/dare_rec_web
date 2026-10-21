@@ -1,5 +1,5 @@
-const SPREADSHEET_ID = '1XZFT-DhpGt1i3xtF0CyeKVBTfnSCGJG8OaPTDy__fnc';
-const DRIVE_FOLDER_ID = '1vZf28-Eoo7OBy1hAb-9lKKsBZ0INkPnU';
+const SPREADSHEET_ID = '1tjDyOxfcLcIyiocpGcrjw_THR6WRNYO71AGuUGlEpTQ';
+const DRIVE_FOLDER_ID = '1mPSrYUe9r9fUZViJeHdOiDBpCGa3I1OQ';
 const MAX_RESUME_MB = 20;
 const HEADERS = [
   'Timestamp',
@@ -60,11 +60,12 @@ function doPost(e) {
       }
     });
 
-    // BTech first-years are restricted to the volunteer path; they cannot select a team role.
+    // BTech first-years can choose only from the three approved paths.
     const academicProgram = String(p.academicProgram || '').trim();
     const selectedRole = String(p.role || '').trim();
-    if (academicProgram === 'Btech 1st year' && selectedRole !== 'Volunteer') {
-      throw new Error('BTech first-year applicants can apply as volunteers only.');
+    const firstYearRoles = ['Volunteer', 'Graphic Designer', 'Video Editor'];
+    if (academicProgram === 'Btech 1st year' && firstYearRoles.indexOf(selectedRole) === -1) {
+      throw new Error('BTech first-years may choose Volunteer, Graphic Designer, or Video Editor.');
     }
     if (selectedRole === 'Volunteer' && academicProgram !== 'Btech 1st year') {
       throw new Error('The volunteer path is reserved for BTech first-year applicants.');

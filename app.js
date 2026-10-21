@@ -21,7 +21,7 @@ function updateHero(role){
   if(!meta){chosenHero.innerHTML='<span>SELECTED SPELL</span><b>UNASSIGNED</b><small>Choose a spell from the roster.</small>';heroPreview.innerHTML='<span>✦</span><div><b>NO SPELL SELECTED</b><small>Select your batch and spell to claim a mission.</small></div>';return}
   chosenHero.innerHTML=`<span>${role==='Volunteer'?'FIRST-YEAR PATH':'SELECTED SPELL'}</span><b>${escapeHtml(meta[0])}</b><small>${escapeHtml(meta[1])} // ${escapeHtml(meta[2])}</small>`;
   const portrait=meta[3]?`<img class="preview-portrait" src="${meta[3]}" alt="">`:'<span>✦</span>';
-  const message=role==='Volunteer'?'BTech first-years are assigned as volunteers.':'Selected role preview.';
+  const message=role==='Volunteer'?'Available to BTech first-years.':'Selected role preview.';
   heroPreview.innerHTML=`${portrait}<div><b>${escapeHtml(meta[0])}</b><small>${escapeHtml(meta[1])} // ${escapeHtml(meta[2])}. ${message}</small></div>`
 }
 function values(){const data=Object.fromEntries(new FormData(form).entries());if(roleSelect.disabled)data.role=roleSelect.value;return data}
@@ -30,21 +30,24 @@ function fileToBase64(file){return new Promise((resolve,reject)=>{const reader=n
 function syncProgramRole(){
   const isFirstYear=programSelect.value==='Btech 1st year';
   const previous=roleSelect.value;
-  roleSelect.disabled=isFirstYear;
+  roleSelect.disabled=false;
   if(isFirstYear){
-    roleSelect.innerHTML='<option value="Volunteer">Volunteer — assigned</option>';
-    roleSelect.value='Volunteer';
-    roleLabel.textContent='ASSIGNED PATH';
+    const firstYearOptions=['Volunteer','Graphic Designer','Video Editor'];
+    roleSelect.innerHTML='<option value="">Choose a first-year path</option>'+firstYearOptions.map(role=>`<option>${escapeHtml(role)}</option>`).join('');
+    roleSelect.value=firstYearOptions.includes(previous)?previous:'';
+    roleLabel.textContent='CHOOSE YOUR FIRST-YEAR PATH *';
     roleLockNote.hidden=false;
+    roleLockNote.textContent='BTech first-years may choose Volunteer, Graphic Designer, or Video Editor.';
   }else{
     roleSelect.innerHTML='<option value="">Select your spell</option>'+leadershipRoles.map(role=>`<option>${escapeHtml(role)}</option>`).join('');
     roleSelect.value=leadershipRoles.includes(previous)?previous:'';
     roleLabel.textContent='CHOOSE YOUR SPELL / TEAM ROLE *';
     roleLockNote.hidden=true;
+    roleLockNote.textContent='';
   }
   updateHero(roleSelect.value);
 }
-function openModal(role=''){playBackgroundMusic();modal.classList.add('open');modal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';if(role==='Volunteer')programSelect.value='Btech 1st year';syncProgramRole();if(role&&role!=='Volunteer'&&!roleSelect.disabled&&roleMeta[role]){roleSelect.value=role;updateHero(role)}showStep(0);setTimeout(()=>modal.querySelector('input,select,textarea,button')?.focus(),80)}
+function openModal(role=''){playBackgroundMusic();modal.classList.add('open');modal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';if(role==='Volunteer')programSelect.value='Btech 1st year';syncProgramRole();if(role&&roleMeta[role]&&(role==='Volunteer'||!roleSelect.disabled)){roleSelect.value=role;updateHero(role)}showStep(0);setTimeout(()=>modal.querySelector('input,select,textarea,button')?.focus(),80)}
 function closeModal(){modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.style.overflow=''}
 async function playBackgroundMusic(){
   if(!siteAudio)return false;
