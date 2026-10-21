@@ -136,17 +136,10 @@ function submitViaHiddenFrame(cfg,data){
     };
     window.addEventListener('message',msgHandler);
 
-    // Fallback for browsers that block the cross-origin postMessage response:
-    // the iframe loading twice means the POST response has completed.
-    let loadCount=0;
-    iframe.addEventListener('load',()=>{
-      loadCount += 1;
-      if(loadCount >= 2){
-        setTimeout(()=>{ if(!submissionHandled) resolveOnce({ok:true,message:'Submission completed.'}); },500);
-      }
-    });
+    // An iframe load only proves that navigation finished, not that the sheet write succeeded.
+    // Require the Apps Script postMessage acknowledgement; otherwise report an unknown result.
 
-    submissionTimer=setTimeout(()=>rejectOnce(new Error('Upload timed out. Please check the Apps Script deployment and try again.')),45000);
+    submissionTimer=setTimeout(()=>rejectOnce(new Error('Could not confirm the save. Check the spreadsheet and Apps Script Executions before trying again to avoid a duplicate application.')),45000);
     wireForm.submit();
   });
 }
