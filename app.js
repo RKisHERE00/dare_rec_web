@@ -156,7 +156,7 @@ form.addEventListener('submit',async e=>{
 
   const submitBtn=form.querySelector('button[type="submit"]');
   submitBtn.disabled=true;
-  status.textContent=resume?'ASSEMBLING APPLICATION + UPLOADING RESUME…':'ASSEMBLING APPLICATION…';
+  status.textContent=resume?'COOKING YOUR APPLICATION + UPLOADING RESUME…':'COOKING YOUR APPLICATION…';
   try{
     const resumeBase64=resume?await fileToBase64(resume):'';
     const submissionResult=await submitViaHiddenFrame(cfg,{ 
@@ -165,9 +165,7 @@ form.addEventListener('submit',async e=>{
       whyInterested:v.whyInterested||'', resumeName:resume?.name||'',
       resumeMimeType:resume?.type||'', resumeBase64
     });
-    status.textContent=submissionResult.emailSent
-      ? (resume?'APPLICATION SUBMITTED ✓ — CONFIRMATION OWL SENT; RESUME SAVED TO DRIVE.':'APPLICATION SUBMITTED ✓ — CONFIRMATION OWL SENT TO YOUR EMAIL.')
-      : (resume?'APPLICATION SAVED ✓ — RESUME SAVED TO DRIVE, BUT EMAIL CONFIRMATION COULD NOT BE SENT.':'APPLICATION SAVED ✓ — EMAIL CONFIRMATION COULD NOT BE SENT.');
+    status.textContent=resume?'APPLICATION SAVED ✓ — RESUME SAVED TO DRIVE.':'APPLICATION SAVED ✓.';
     setTimeout(()=>{form.reset(); resumeName.textContent='DROP YOUR RESUME HERE'; syncProgramRole(); updateHero(''); showStep(0); closeModal();},1200);
   }catch(err){
     console.error(err);
