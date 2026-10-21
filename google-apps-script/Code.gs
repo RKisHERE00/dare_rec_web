@@ -115,7 +115,7 @@ function doPost(e) {
       clean_(p.name),
       clean_(p.scholarNo),
       clean_(p.academicProgram),
-      clean_(p.contactNo),
+      "'" + clean_(p.contactNo), // Force phone numbers such as +91... to remain plain text in Sheets.
       clean_(p.emailId),
       clean_(p.branch),
       clean_(p.role),
